@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\User;
+use Tymon\JWTAuth\Exceptions\JWTException;
+use JWTAuth;
 
 class AuthController extends Controller
 {
@@ -69,21 +71,21 @@ class AuthController extends Controller
     		'email'=>'required|email',
     		'password' => 'required'
     	]);
-
-    	$email = $request->input('email');
-    	$password = $request->input('password');
     	
-    	$user = [
-    		'name' => 'Name',
-    		'email' => $email,
-    		'password' => $password
-    	];
+    	$credentials = $request->only('email','password');
 
-    	$response = [
-    		'msg' => 'User signed in',
-    		'user' => $user
-    	];
+    	try{
+    		if(! $token = JWTAuth::attempt($credentials)) {
+    			return response()->json(['msg'=>'Invalid credentials'],401);
+    		}
+    	} catch(JWTException $e) {
+    		return response()->json(['msg'=>'Could not create token.'],500);
+    	}
 
-    	return response()->json($response, 200);
+    	return response()->json(['token'=>$token], 200);
     }
+    //hasil
+    // {
+    //     "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOjEsImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3QvbGFyYXZlbC9sYXRpaGFuL0FQSS9yZXN0X2FwaS9wdWJsaWMvYXBpL3YxL3VzZXIvc2lnbmluIiwiaWF0IjoxNTAwMTMzMzQ2LCJleHAiOjE1MDAxMzY5NDYsIm5iZiI6MTUwMDEzMzM0NiwianRpIjoiMHRHdEE4VExKWDlRaDJaVyJ9.wI9a6fcEIK6LsBnp6lMwrla_OOI_4qCuZLubjvsMXqk"
+    // }
 }
