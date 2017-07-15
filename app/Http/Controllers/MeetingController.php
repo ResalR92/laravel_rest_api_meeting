@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Meeting;
 use Carbon\Carbon;
+use JWTAuth;
 
 class MeetingController extends Controller
 {
@@ -60,14 +61,17 @@ class MeetingController extends Controller
         $this->validate($request, [
             'title' =>'required',
             'description' => 'required',
-            'time' => 'required|date_format:YmdHie',
-            'user_id' => 'required'
+            'time' => 'required|date_format:YmdHie'
         ]);
+        //extract user ->from token
+        if(!$user = JWTAuth::parseToken()->authenticate()) {
+            return response()->json(['msg'=>'User not found'],404);
+        }
 
         $title = $request->input('title');
         $description = $request->input('description');
         $time = $request->input('time');
-        $user_id = $request->input('user_id');
+        $user_id = $user->id;
 
         //simpan data meeting ke DB
         $meeting = new Meeting([
@@ -182,19 +186,21 @@ class MeetingController extends Controller
         $this->validate($request, [
             'title' =>'required',
             'description' => 'required',
-            'time' => 'required|date_format:YmdHie',
-            'user_id' => 'required'
+            'time' => 'required|date_format:YmdHie'
         ]);
-
+        //extract user ->from token
+        if(!$user = JWTAuth::parseToken()->authenticate()) {
+            return response()->json(['msg'=>'User not found'],404);
+        }
 
         $title = $request->input('title');
         $description = $request->input('description');
         $time = $request->input('time');
-        $user_id = $request->input('user_id');
+        $user_id = $user->id;
 
         $meeting = Meeting::with('users')->findOrFail($id);
         //jika user bukan pemilik meeting
-        if(!$meeting->users()->where('user_id',$user_id)->first()) {
+        if(!$meeting->users()->where('users.id',$user_id)->first()) {
             return response()->json(['msg'=>'User not registered for meeting, update not successful'],401);
         }
 
@@ -261,6 +267,17 @@ class MeetingController extends Controller
     public function destroy($id)
     {
         $meeting = Meeting::findOrFail($id);
+
+        //extract user ->from token
+        if(!$user = JWTAuth::parseToken()->authenticate()) {
+            return response()->json(['msg'=>'User not found'],404);
+        }
+
+        //jika user bukan pemilik meeting
+        if(!$meeting->users()->where('users.id',$user->id)->first()) {
+            return response()->json(['msg'=>'User not registered for meeting, delete not successful'],401);
+        }
+
         $users = $meeting->users;
         $meeting->users()->detach();//clear relation->pivot table
 
