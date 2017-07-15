@@ -258,6 +258,17 @@ class MeetingController extends Controller
      */
     public function destroy($id)
     {
+        $meeting = Meeting::findOrFail($id);
+        $users = $meeting->users;
+        $meeting->users()->detach();//clear relation->pivot table
+
+        if(!$meeting->delete()) {
+            foreach ($users as $user) {
+                $meeting->users()->attach($user);//mengembalikan relasi jika tidak menghapus
+            }
+            return response()->json(['msg'=>'Deletion failed'],404);
+        }
+
         $response = [
             'msg' => 'Meeting deleted',
             'create' => [
@@ -269,4 +280,13 @@ class MeetingController extends Controller
 
         return response()->json($response,200);
     }
+    //hasil
+    // {
+    //     "msg": "Meeting deleted",
+    //     "create": {
+    //         "href": "api/v1/meeting",
+    //         "method": "POST",
+    //         "params": "title,description,time"
+    //     }
+    // }
 }
