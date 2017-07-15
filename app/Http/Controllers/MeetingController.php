@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Meeting;
+use Carbon\Carbon;
 
 class MeetingController extends Controller
 {
@@ -66,24 +67,55 @@ class MeetingController extends Controller
         $time = $request->input('time');
         $user_id = $request->input('user_id');
 
-        $meeting = [
+        //simpan data meeting ke DB
+        $meeting = new Meeting([
+            'time' => Carbon::createFromFormat('YmdHie',$time),
             'title' => $title,
-            'description' => $description,
-            'time' => $time,
-            'user_id' => $user_id,
-            'view_meeting' => [
-                'href' => 'api/v1/meeting/1',
+            'description' => $description
+        ]);
+
+        if($meeting->save()) {
+            $meeting->users()->attach($user_id);//add entry to pivot table
+            $meeting->view_meeting = [
+                'href' => 'api/v1/meeting/'.$meeting->id,
                 'method' => 'GET'
-            ]
-        ];
+            ];
+
+            $response = [
+                'msg' => 'Meeting created',
+                'meeting' => $meeting
+            ];
+
+            return response()->json($response,201);
+        }
 
         $response = [
-            'msg' => 'Meeting created',
+            'msg' => 'Error during creating',
             'meeting' => $meeting
         ];
 
-        return response()->json($response,201);//201 new resource was created
+        return response()->json($response,404);
     }
+    //hasil
+    // {
+    //     "msg": "Meeting created",
+    //     "meeting": {
+    //         "time": {
+    //             "date": "2016-01-15 01:33:00.000000",
+    //             "timezone_type": 2,
+    //             "timezone": "CET"
+    //         },
+    //         "title": "Test2",
+    //         "description": "This is test2",
+    //         "updated_at": "2017-07-15 14:16:21",
+    //         "created_at": "2017-07-15 14:16:21",
+    //         "id": 3,
+    //         "view_meeting": {
+    //             "href": "api/v1/meeting/3",
+    //             "method": "GET"
+    //         }
+    //     }
+    // }
 
     /**
      * Display the specified resource.
