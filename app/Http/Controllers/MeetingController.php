@@ -184,20 +184,29 @@ class MeetingController extends Controller
             'user_id' => 'required'
         ]);
 
+
         $title = $request->input('title');
         $description = $request->input('description');
         $time = $request->input('time');
         $user_id = $request->input('user_id');
 
-        $meeting = [
-            'title' => $title,
-            'description' => $description,
-            'time' => $time,
-            'user_id' => $user_id,
-            'view_meeting' => [
-                'href' => 'api/v1/meeting/1',
-                'method' => 'GET'
-            ]
+        $meeting = Meeting::with('users')->findOrFail($id);
+        //jika user bukan pemilik meeting
+        if(!$meeting->users()->where('user_id',$user_id)->first()) {
+            return response()->json(['msg'=>'User not registered for meeting, update not successful'],401);
+        }
+
+        $meeting->time = Carbon::createFromFormat('YmdHie',$time);
+        $meeting->title = $title;
+        $meeting->description = $description;
+
+        if(!$meeting->update()) {
+            return response()->json(['msg'=>'Error during updating'], 404);
+        }
+
+        $meeting->view_meeting = [
+            'href' => 'api/v1/meeting/'.$meeting->id,
+            'method' => 'GET'
         ];
 
         $response = [
@@ -207,6 +216,39 @@ class MeetingController extends Controller
 
         return response()->json($response,200);
     }
+    //hasil
+    // {
+    //     "msg": "Meeting updated",
+    //     "meeting": {
+    //         "id": 5,
+    //         "created_at": "2017-07-15 14:18:53",
+    //         "updated_at": "2017-07-15 14:37:44",
+    //         "time": {
+    //             "date": "2016-01-15 01:33:00.000000",
+    //             "timezone_type": 2,
+    //             "timezone": "CET"
+    //         },
+    //         "title": "Test4 UPDATED",
+    //         "description": "This is test4",
+    //         "view_meeting": {
+    //             "href": "api/v1/meeting/5",
+    //             "method": "GET"
+    //         },
+    //         "users": [
+    //             {
+    //                 "id": 1,
+    //                 "name": "Resal Ramdahadi",
+    //                 "email": "resalramdahadi92@gmail.com",
+    //                 "created_at": "2017-07-15 13:47:12",
+    //                 "updated_at": "2017-07-15 13:47:12",
+    //                 "pivot": {
+    //                     "meeting_id": 5,
+    //                     "user_id": 1
+    //                 }
+    //             }
+    //         ]
+    //     }
+    // }
 
     /**
      * Remove the specified resource from storage.
