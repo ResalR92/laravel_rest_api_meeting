@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Meeting;
 use App\User;
+use JWTAuth;
 
 class RegistrationController extends Controller
 {
@@ -22,15 +23,18 @@ class RegistrationController extends Controller
     public function store(Request $request)
     {
         $this->validate($request, [
-            'meeting_id' => 'required',
-            'user_id' => 'required'
+            'meeting_id' => 'required'
         ]);
 
+        if(!$user = JWTAuth::parseToken()->authenticate()) {
+            return response()->json(['msg'=>'User not found'],404);
+        }
+
         $meeting_id = $request->input('meeting_id');
-        $user_id = $request->input('user_id');
+        // $user_id = $request->input('user_id');
 
         $meeting = Meeting::findOrFail($meeting_id);
-        $user = User::findOrFail($user_id);
+        // $user = User::findOrFail($user_id);
 
         $message = [
             'msg' => 'User is already registered for meeting.',
@@ -93,12 +97,22 @@ class RegistrationController extends Controller
     public function destroy($id)
     {
         $meeting = Meeting::findOrFail($id);
-        $meeting->users()->detach();
+        // $meeting->users()->detach();//detach semua user
+        //extract user ->from token
+        if(!$user = JWTAuth::parseToken()->authenticate()) {
+            return response()->json(['msg'=>'User not found'],404);
+        }
+        //jika user bukan pemilik meeting
+        if(!$meeting->users()->where('users.id',$user->id)->first()) {
+            return response()->json(['msg'=>'User not registered for meeting, delete not successful'],401);
+        }
+
+        $meeting->users()->detach($user->id);//clear record pivot
 
         $response = [
             'msg' => 'User unregistered for meeting',
             'meeting' => $meeting,
-            'user' => $meeting->users(),
+            'user' => $user,
             'unregistered' => [
                 'href' => 'api/v1/meeting/registration',
                 'method' => 'POST',
