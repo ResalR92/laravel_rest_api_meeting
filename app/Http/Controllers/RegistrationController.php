@@ -89,24 +89,13 @@ class RegistrationController extends Controller
      */
     public function destroy($id)
     {
-        $meeting = [
-            'title' => 'Title',
-            'description' => 'Description',
-            'time' => 'Time',
-            'view_meeting' => [
-                'href' => 'api/v1/meeting/1',
-                'method' => 'GET'
-            ]
-        ];
-
-        $user = [
-            'name' => 'Name'
-        ];
+        $meeting = Meeting::findOrFail($id);
+        $meeting->users()->detach();
 
         $response = [
             'msg' => 'User unregistered for meeting',
             'meeting' => $meeting,
-            'user' => $user,
+            'user' => $meeting->users(),
             'unregistered' => [
                 'href' => 'api/v1/meeting/registration',
                 'method' => 'POST',
@@ -116,4 +105,22 @@ class RegistrationController extends Controller
 
         return response()->json($response,200);
     }
+    //hasil
+    // {
+    //     "msg": "User unregistered for meeting",
+    //     "meeting": {
+    //         "id": 3,
+    //         "created_at": "2017-07-15 14:16:21",
+    //         "updated_at": "2017-07-15 14:16:21",
+    //         "time": "2016-01-15 01:33:00",
+    //         "title": "Test2",
+    //         "description": "This is test2"
+    //     },
+    //     "user": {},
+    //     "unregistered": {
+    //         "href": "api/v1/meeting/registration",
+    //         "method": "POST",
+    //         "params": "user_id,meeting_id"
+    //     }
+    // }
 }
