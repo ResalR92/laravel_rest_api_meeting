@@ -125,23 +125,48 @@ class MeetingController extends Controller
      */
     public function show($id)
     {
-        $meeting = [
-            'title' => 'Title',
-            'description' => 'Description',
-            'time' => 'Time',
-            'user_id' => 'User ID',
-            'view_meeting' => [
-                'href' => 'api/v1/meeting',
-                'method' => 'GET'
-            ]
+        $meeting = Meeting::with('users')->where('id',$id)->firstOrFail();//eager loading
+
+        $meeting->view_meeting = [
+            'href' => 'api/v1/meeting',
+            'method' => 'GET'
         ];
 
         $response = [
-            'msg' => 'List of all Meetings',
+            'msg' => 'Meeting Information',
             'meetings' => $meeting
         ];
         return response()->json($response,200);
     }
+    //hasil
+    // {
+    //     "msg": "Meeting Information",
+    //     "meetings": {
+    //         "id": 3,
+    //         "created_at": "2017-07-15 14:16:21",
+    //         "updated_at": "2017-07-15 14:16:21",
+    //         "time": "2016-01-15 01:33:00",
+    //         "title": "Test2",
+    //         "description": "This is test2",
+    //         "view_meeting": {
+    //             "href": "api/v1/meeting",
+    //             "method": "GET"
+    //         },
+    //         "users": [
+    //             {
+    //                 "id": 2,
+    //                 "name": "Guest",
+    //                 "email": "guest@mail.com",
+    //                 "created_at": "2017-07-15 14:19:17",
+    //                 "updated_at": "2017-07-15 14:19:17",
+    //                 "pivot": {
+    //                     "meeting_id": 3,
+    //                     "user_id": 2
+    //                 }
+    //             }
+    //         ]
+    //     }
+    // }
 
     /**
      * Update the specified resource in storage.
