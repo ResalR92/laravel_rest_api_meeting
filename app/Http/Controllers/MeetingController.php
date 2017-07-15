@@ -11,7 +11,9 @@ class MeetingController extends Controller
 
     public function __construct()
     {
-        // $this->middleware('name');
+        $this->middleware('jwt.auth',['only'=>[
+            'store','update','destroy'
+        ]]);
     }
     /**
      * Display a listing of the resource.
