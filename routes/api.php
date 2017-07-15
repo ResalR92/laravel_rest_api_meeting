@@ -1,6 +1,6 @@
 <?php
 
-use Illuminate\Http\Request;
+// use Illuminate\Http\Request;
 
 /*
 |--------------------------------------------------------------------------
@@ -13,6 +13,14 @@ use Illuminate\Http\Request;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
+// Route::middleware('auth:api')->get('/user', function (Request $request) {
+//     return $request->user();
+// });
+
+Route::group(['prefix'=>'v1'], function() {
+	Route::resource('meeting','MeetingController',['except'=>['edit','create']]);
+	Route::resource('meeting/registration','RegistrationController',['only'=>['store','destroy']]);
+
+	Route::post('user','AuthController@store');//registration
+	Route::post('user','AuthController@signin');//sigin
 });
