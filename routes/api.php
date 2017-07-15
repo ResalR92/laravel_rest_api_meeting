@@ -22,5 +22,5 @@ Route::group(['prefix'=>'v1'], function() {
 	Route::resource('meeting/registration','RegistrationController',['only'=>['store','destroy']]);
 
 	Route::post('user','AuthController@store');//registration
-	Route::post('user','AuthController@signin');//sigin
+	Route::post('user/signin','AuthController@signin');//signin
 });

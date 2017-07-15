@@ -29,7 +29,28 @@ class MeetingController extends Controller
      */
     public function store(Request $request)
     {
-        return "it work";
+        $title = $request->input('title');
+        $description = $request->input('description');
+        $time = $request->input('time');
+        $user_id = $request->input('user_id');
+
+        $meeting = [
+            'title' => $title,
+            'description' => $description,
+            'time' => $time,
+            'user_id' => $user_id,
+            'view_meeting' => [
+                'href' => 'api/v1/meeting/1',
+                'method' => 'GET'
+            ]
+        ];
+
+        $response = [
+            'msg' => 'Meeting created',
+            'meeting' => $meeting
+        ];
+
+        return response()->json($response,201);//201 new resource was created
     }
 
     /**
@@ -52,6 +73,10 @@ class MeetingController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $title = $request->get('title');
+        $description = $request->get('description');
+        $time = $request->get('time');
+        $user_id = $request->get('user_id');
         return "it work";
     }
 
